@@ -10,6 +10,6 @@ html, body, h1, h2, h3, ul, li {
     background: #233142;
     font-family: helvetica, arial, sans-serif;
     font-size: 13px;
-    color: #333333;
-    line-height: 1;
+    color: #ffffff; /* Changed from #333333 to white */
+    line-height: 1.5; /* Added line height for better readability */
   }
