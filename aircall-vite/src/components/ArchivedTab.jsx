@@ -15,17 +15,14 @@ const ArchivedTab = () => {
 
   const handleUnarchive = async (id) => {
     try {
-      const result = await unarchiveCall(id);
-      if (result && !result.is_archived) {
-        // Only remove from list if successfully unarchived
-        setArchivedActivities(archivedActivities.filter(activity => activity.id !== id));
-      }
+      await unarchiveCall(id);
+      // Remove the activity from the archived list
+      setArchivedActivities(prev => prev.filter(activity => activity.id !== id));
     } catch (error) {
       console.error('Failed to unarchive call:', error);
       alert('Failed to unarchive call. Please try again.');
     }
   };
-
   return (
     <div className="archived-tab">
       <h2>Archived Calls</h2>
