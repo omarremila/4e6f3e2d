@@ -34,6 +34,7 @@ export const fetchCalls = async () => {
     return [];
   }
 };
+
 export const archiveCall = async (id) => {
   try {
     const response = await fetch(`${BASE_URL}/activities/${id}`, {
@@ -81,14 +82,55 @@ export const unarchiveCall = async (id) => {
     throw error;
   }
 };
+
+export const archiveAllCalls = async (activities) => {
+  try {
+    const promises = activities.map(activity => 
+      fetch(`${BASE_URL}/activities/${activity.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_archived: true }),
+      })
+    );
+    
+    await Promise.all(promises);
+    return true;
+  } catch (error) {
+    console.error('Error archiving all calls:', error);
+    throw error;
+  }
+};
+
+export const unarchiveAllCalls = async (activities) => {
+  try {
+    const promises = activities.map(activity => 
+      fetch(`${BASE_URL}/activities/${activity.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_archived: false }),
+      })
+    );
+    
+    await Promise.all(promises);
+    return true;
+  } catch (error) {
+    console.error('Error unarchiving all calls:', error);
+    throw error;
+  }
+};
+
 export const testGetSingleActivity = async (id) => {
-    try {
-      const response = await fetch(`${BASE_URL}/activities/${id}`);
-      console.log('GET Single Activity Status:', response.status);
-      const data = await response.json();
-      console.log('GET Single Activity Data:', data);
-      return data;
-    } catch (error) {
-      console.error('GET Single Activity Error:', error);
-    }
-  };
+  try {
+    const response = await fetch(`${BASE_URL}/activities/${id}`);
+    console.log('GET Single Activity Status:', response.status);
+    const data = await response.json();
+    console.log('GET Single Activity Data:', data);
+    return data;
+  } catch (error) {
+    console.error('GET Single Activity Error:', error);
+  }
+};

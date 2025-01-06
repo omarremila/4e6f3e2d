@@ -1,47 +1,102 @@
-import React, { useEffect, useState } from 'react';
-import { fetchCalls, archiveCall, testGetSingleActivity } from '../utils/api.jsx';
+import React, { useState, useEffect } from 'react';
+import CallCard from './CallCard';
+import { archiveCall, archiveAllCalls } from '../utils/api';
 
 const ActivityFeed = () => {
   const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchActivities = async () => {
-      const data = await fetchCalls();
-      setActivities(data.filter(activity => !activity.is_archived));
-    };
-
     fetchActivities();
   }, []);
 
-  const handleArchive = async (id) => {
+  const fetchActivities = async () => {
     try {
-      // First test if we can GET the activity
-      console.log('Testing GET for activity:', id);
-      const testGet = await testGetSingleActivity(id);
-      console.log('GET test result:', testGet);
-  
-      // Then try to archive it
-      const result = await archiveCall(id);
-      if (result && result.is_archived) {
-        setActivities(activities.filter(activity => activity.id !== id));
-      }
-    } catch (error) {
-      console.error('Failed to archive call:', error);
-      alert('Failed to archive call. Please try again.');
+      const response = await fetch('https://aircall-api.onrender.com/activities');
+      const data = await response.json();
+      setActivities(data.filter(activity => !activity.is_archived));
+      setError(null);
+    } catch (err) {
+      setError('Failed to load activities');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleArchive = async (id) => {
+    try {
+      await fetch(`https://aircall-api.onrender.com/activities/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_archived: true }),
+      });
+      setActivities(prev => prev.filter(activity => activity.id !== id));
+    } catch (error) {
+      console.error('Failed to archive call:', error);
+    }
+  };
+const handleArchiveAll = async () => {
+  try {
+    await archiveAllCalls(activities);
+    // Clear all activities after successful archival
+    setActivities([]);
+  } catch (error) {
+    console.error('Failed to archive all calls:', error);
+    alert('Failed to archive all calls. Please try again.');
+  }
+};
+
+// Update the Archive All button to use this function
+{activities.length > 0 && (
+  <button 
+    onClick={handleArchiveAll}
+    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+  >
+    Archive All
+  </button>
+)}
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="activity-feed">
-      <h2>Activity Feed</h2>
-      {activities.map((activity) => (
-        <div key={activity.id} className="activity-item">
-          <div>From: {activity.from}</div>
-          <div>To: {activity.to}</div>
-          <div>Duration: {activity.duration} seconds</div>
-          <div>Call Type: {activity.call_type}</div>
-          <button onClick={() => handleArchive(activity.id)}>Archive</button>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Activity Feed</h2>
+          <p className="text-gray-600 mt-1">{activities.length} active calls</p>
         </div>
-      ))}
+        {activities.length > 0 && (
+          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
+            Archive All
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        {activities.map(activity => (
+          <CallCard 
+            key={activity.id}
+            activity={activity}
+            onAction={handleArchive}
+            actionType="Archive"
+          />
+        ))}
+      </div>
+
+      {activities.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-4xl mb-4">📥</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">No Active Calls</h3>
+          <p className="text-gray-500">All calls have been archived</p>
+        </div>
+      )}
     </div>
   );
 };
