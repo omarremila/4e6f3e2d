@@ -5,6 +5,21 @@ export const setAuthToken = (token) => {
   AUTH_TOKEN = token;
 };
 
+// Add the missing fetchCallById function
+export const fetchCallById = async (id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/activities/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching call by ID:', error);
+    throw error;
+  }
+};
+
 export const testAPI = async () => {
   try {
     const response = await fetch(`${BASE_URL}/activities`);
@@ -120,17 +135,5 @@ export const unarchiveAllCalls = async (activities) => {
   } catch (error) {
     console.error('Error unarchiving all calls:', error);
     throw error;
-  }
-};
-
-export const testGetSingleActivity = async (id) => {
-  try {
-    const response = await fetch(`${BASE_URL}/activities/${id}`);
-    console.log('GET Single Activity Status:', response.status);
-    const data = await response.json();
-    console.log('GET Single Activity Data:', data);
-    return data;
-  } catch (error) {
-    console.error('GET Single Activity Error:', error);
   }
 };
